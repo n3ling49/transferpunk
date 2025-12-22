@@ -1,0 +1,25 @@
+services:
+  tpunk-nginx:
+    container_name: tpunk-nginx
+    image: nginx:latest
+    ports:
+      - '80:80'
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend:/app
+    depends_on:
+      - tpunk-api
+    networks:
+      - tpunk
+  
+  tpunk-api:
+    container_name: tpunk-api
+    build:
+      context: ./transfermarkt-api
+      dockerfile: Dockerfile
+    networks:
+      - tpunk
+
+networks:
+  tpunk:
+    driver: bridge

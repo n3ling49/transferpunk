@@ -1,0 +1,52 @@
+<html>
+	<body>
+		<main>
+			<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button><br><br>
+			<div id="players">
+			</div>
+		</main>
+	</body>
+	<script>
+		//TODO: track and display correct answers
+		//TODO: styling
+
+		//buli: L1, serie a: IT1, laliga: ES1, prem: GB1, ligue 1: FR1
+		//TODO: select club and season(s)
+
+		const input = document.getElementById("answer");
+
+		input.addEventListener("keypress", function(event) {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			document.getElementById("submitBtn").click();
+		}
+		});
+
+		//TODO: loading animation
+		//TODO: error handling
+		let playerLastNames = []
+		fetch("http://localhost/clubs/131/players").then(async (res) => {
+			const playersElement = document.getElementById("players")
+			const data = await res.json()
+			data.players.map((player, index) => {
+				playerLastNames.push(player.name)
+				const newElement = document.createElement('span')
+				newElement.innerText = (index + 1) + ":"
+				playersElement.append(newElement) //TODO: unsafe -> XSS
+				playersElement.append(document.createElement('br'))
+			})
+		})
+
+		function checkAnswer(){
+			const answerInput = document.getElementById("answer")
+			const answer = answerInput.value
+			answerInput.value = ""
+
+			//TODO: tolerate small mistakes
+			//TODO: accept only last name
+			const answerIndex = playerLastNames.findIndex(name => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === answer.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+			if(answerIndex === -1) return
+			document.getElementById("players").children[answerIndex*2].innerText+=" "+playerLastNames[answerIndex]
+		}
+	</script>
+</html>
