@@ -45,7 +45,7 @@
 
 		function checkAnswer(){
 			const answerInput = document.getElementById("answer")
-			const answer = answerInput.value
+			const answer = answerInput.value.toLowerCase()
 			answerInput.value = ""
 
 			const answerIndex = playerNames.findIndex((name, index) => !indexAnswered[index] && checkName(normalizeName(answer), normalizeName(name)))
@@ -65,7 +65,7 @@
 		}
 
 		function getErrorAmount(answerPart, correctPart) {
-			console.log(`answerPart: ${answerPart}, correctPart: ${correctPart}`)
+			//console.log(`answerPart: ${answerPart}, correctPart: ${correctPart}`)
 			let errors = checkErrors(answerPart, correctPart)
 			//check if one char too much
 			errors = checkMissingChar(errors, answerPart, (newAnswer) => checkErrors(newAnswer, correctPart))
@@ -76,8 +76,6 @@
 		}
 
 		function checkErrors(answerString, correctString) {
-			console.log(answerString)
-			console.log(correctString)
 			let errors = Math.abs(answerString.length - correctString.length)
 			const maxLength = Math.min(answerString.length, correctString.length)
 			for(let i=0;i<maxLength;i++){
@@ -87,12 +85,10 @@
 		}
 
 		function checkName(name, correctName) {
-			console.log("A: "+name)
-			console.log("C: "+correctName)
 			//TODO: why 6 errors allowed?
 			if(!name || name.length === 0) return false
 
-			const nameParts = correctName.replace("-", " ").split(" ") //TODO: maybe split before replacing
+			const nameParts = correctName.toLowerCase().replace("-", " ").split(" ") //TODO: maybe split before replacing
 			name = name.replaceAll(/ +/g, " ").replace("-", " ").trim()
 			const answerParts = name.split(" ")
 
