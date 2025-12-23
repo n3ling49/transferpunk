@@ -24,29 +24,84 @@
 
 		//TODO: loading animation
 		//TODO: error handling
-		let playerLastNames = []
+		let indexAnswered = []
+		let playerNames = []
 		fetch("http://localhost/clubs/131/players").then(async (res) => {
 			const playersElement = document.getElementById("players")
 			const data = await res.json()
 			data.players.map((player, index) => {
-				playerLastNames.push(player.name)
+				playerNames.push(player.name)
 				const newElement = document.createElement('span')
 				newElement.innerText = (index + 1) + ":"
 				playersElement.append(newElement) //TODO: unsafe -> XSS
 				playersElement.append(document.createElement('br'))
 			})
+			indexAnswered = Array(playerNames.length).fill(false) //TODO: can this be handled better? one object for answer and isAnswered?
 		})
+
+		function normalizeName(name) {
+			return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+		}
 
 		function checkAnswer(){
 			const answerInput = document.getElementById("answer")
 			const answer = answerInput.value
 			answerInput.value = ""
 
-			//TODO: tolerate small mistakes
-			//TODO: accept only last name
-			const answerIndex = playerLastNames.findIndex(name => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === answer.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+			const answerIndex = playerNames.findIndex((name, index) => !indexAnswered[index] && checkName(normalizeName(answer), normalizeName(name)))
 			if(answerIndex === -1) return
-			document.getElementById("players").children[answerIndex*2].innerText+=" "+playerLastNames[answerIndex]
+			indexAnswered[answerIndex] = true
+			document.getElementById("players").children[answerIndex*2].innerText+=" "+playerNames[answerIndex]
+		}
+
+		function checkMissingChar(errors, originalString, callback) {
+			if (errors === 0) return errors
+			for(let i=0;i<originalString.length;i++){
+				const newString = originalString.substring(0, i) + originalString.substring(i + 1)
+				const newErrors = callback(newString)
+				if(newErrors < errors) errors = newErrors
+			}
+			return errors
+		}
+
+		function getErrorAmount(answerPart, correctPart) {
+			console.log(`answerPart: ${answerPart}, correctPart: ${correctPart}`)
+			let errors = checkErrors(answerPart, correctPart)
+			//check if one char too much
+			errors = checkMissingChar(errors, answerPart, (newAnswer) => checkErrors(newAnswer, correctPart))
+			//check if one char missing
+			errors = checkMissingChar(errors, correctPart, (newCorrect) => checkErrors(answerPart, newCorrect))
+
+			return errors
+		}
+
+		function checkErrors(answerString, correctString) {
+			console.log(answerString)
+			console.log(correctString)
+			let errors = Math.abs(answerString.length - correctString.length)
+			const maxLength = Math.min(answerString.length, correctString.length)
+			for(let i=0;i<maxLength;i++){
+				if(answerString[i] !== correctString[i]) errors++
+			}
+			return errors
+		}
+
+		function checkName(name, correctName) {
+			console.log("A: "+name)
+			console.log("C: "+correctName)
+			//TODO: why 6 errors allowed?
+			if(!name || name.length === 0) return false
+
+			const nameParts = correctName.replace("-", " ").split(" ") //TODO: maybe split before replacing
+			name = name.replaceAll(/ +/g, " ").replace("-", " ").trim()
+			const answerParts = name.split(" ")
+
+			let errors = 0
+			answerParts.toReversed().map((answerPart, index) => errors += getErrorAmount(answerPart, nameParts.toReversed()[index]))
+
+			const allowedErrors = Math.floor(correctName.length / 6)
+			if (errors <= allowedErrors) return true
+			return false
 		}
 	</script>
 </html>
