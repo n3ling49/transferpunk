@@ -21,7 +21,7 @@
 			</select>
 			<button onclick="refreshPlayers()">Go</button><br><br>
 			Allow small errors: <input type="checkbox" id="errors-checkbox"><br><br>
-			<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button><br><br>
+			<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button> (<span id="correct-players">0</span>/<span id="total-players">0</span>)<br><br>
 			<div id="players">
 			</div>
 		</main>
@@ -89,6 +89,14 @@
 		let playerNames = []
 		refreshClubs()
 
+		function updateScore(newScore) {
+			const correctElement = document.getElementById("correct-players")
+			const totalElement = document.getElementById("total-players")
+
+			correctElement.innerText = newScore
+			totalElement.innerText = playerNames.length
+		}
+
 		function refreshPlayers() {
 			playerNames = []
 			const playersElement = document.getElementById("players")
@@ -113,9 +121,10 @@
 					playersElement.append(newElement) //TODO: unsafe -> XSS
 					playersElement.append(document.createElement('br'))
 				})
+			}).finally(() => {
+				indexAnswered = Array(playerNames.length).fill(false) //TODO: can this be handled better? one object for answer and isAnswered?
+				updateScore(0)
 			})
-
-			indexAnswered = Array(playerNames.length).fill(false) //TODO: can this be handled better? one object for answer and isAnswered?
 		}
 
 		function normalizeName(name) {
@@ -130,6 +139,7 @@
 			const answerIndex = playerNames.findIndex((name, index) => !indexAnswered[index] && checkName(normalizeName(answer), normalizeName(name)))
 			if(answerIndex === -1) return
 			indexAnswered[answerIndex] = true
+			updateScore(indexAnswered.reduce((totalAnswered, isAnswered) => totalAnswered += isAnswered ? 1 : 0, 0))
 			document.getElementById("players").children[answerIndex*2].innerText+=" "+playerNames[answerIndex]
 		}
 
