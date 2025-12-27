@@ -1,6 +1,25 @@
 <html>
 	<body>
 		<main>
+			<select name="" id="league" onchange="refreshClubs()">
+				<option value="L1" selected>Bundesliga</option>
+				<option value="L2">2. Bundesliga</option>
+				<option value="GB1">Premier League</option>
+				<option value="ES1">LaLiga</option>
+				<option value="IT1">Serie A</option>
+				<option value="FR1">Ligue 1</option>
+
+			</select>
+			<select name="" id="club">
+				<option value="" selected disabled>Club</option>
+			</select><br><br>
+			Saison
+			<select name="" id="start-season" onchange="correctDate()">
+			</select>
+			bis
+			<select name="" id="end-season" onchange="correctDate()">
+			</select>
+			<button onclick="refreshPlayers()">Go</button><br><br>
 			<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button><br><br>
 			<div id="players">
 			</div>
@@ -22,22 +41,81 @@
 		}
 		});
 
+		function fillSeasons(elementId) {
+			const element = document.getElementById(elementId)
+			let currentYear = new Date().getFullYear()
+			const currentMonth = new Date().getMonth()
+			if(currentMonth < 7) currentYear -= 1
+			for(let i=0;i<10;i++) {
+				const newOption = document.createElement("option")
+				newOption.value = currentYear - i
+				const twoDigitYear = currentYear - i - 2000
+				newOption.innerText = twoDigitYear + "/" + (twoDigitYear+1)
+				element.append(newOption)
+			}
+		}
+
+		fillSeasons("start-season")
+		fillSeasons("end-season")
+
+		function refreshClubs() {
+			const leagueID = document.getElementById("league").value
+			fetch(`http://localhost/competitions/${leagueID}/clubs`).then(async (res) => {
+				const data = await res.json()
+				const clubsElement = document.getElementById("club")
+				clubsElement.innerHTML = ""
+				data.clubs.map((club) => {
+					const newOption = document.createElement("option")
+					newOption.value = club.id
+					newOption.innerText = club.name
+					clubsElement.append(newOption)
+				})
+			})
+		}
+
+		function correctDate() {
+			const startSelect = document.getElementById("start-season")
+			const endSelect = document.getElementById("end-season")
+
+			if(parseInt(endSelect.value) < parseInt(startSelect.value)) {
+				startSelect.value = endSelect.value
+			}
+		}
+
 		//TODO: loading animation
 		//TODO: error handling
 		let indexAnswered = []
 		let playerNames = []
-		fetch("http://localhost/clubs/131/players").then(async (res) => {
+		refreshClubs()
+
+		function refreshPlayers() {
+			playerNames = []
 			const playersElement = document.getElementById("players")
-			const data = await res.json()
-			data.players.map((player, index) => {
-				playerNames.push(player.name)
-				const newElement = document.createElement('span')
-				newElement.innerText = (index + 1) + ":"
-				playersElement.append(newElement) //TODO: unsafe -> XSS
-				playersElement.append(document.createElement('br'))
+			playersElement.innerHTML = ""
+			
+			const clubElement = document.getElementById("club")
+			const startElement = document.getElementById("start-season")
+			const endElement = document.getElementById("end-season")
+			const reqs = []
+
+			for (let i=parseInt(startElement.value);i<parseInt(endElement.value)+1;i++) {
+				reqs.push(fetch(`http://localhost/clubs/${clubElement.value}/players?season_id=${i}`).then(res => res.json()))
+			}
+
+			Promise.all(reqs).then(dataArr => {
+				dataArr.toReversed().map(res => res.players).flat().map((player, index) => {
+					if(playerNames.includes(player.name)) return
+					
+					playerNames.push(player.name)
+					const newElement = document.createElement('span')
+					newElement.innerText = (playerNames.length) + ":"
+					playersElement.append(newElement) //TODO: unsafe -> XSS
+					playersElement.append(document.createElement('br'))
+				})
 			})
+
 			indexAnswered = Array(playerNames.length).fill(false) //TODO: can this be handled better? one object for answer and isAnswered?
-		})
+		}
 
 		function normalizeName(name) {
 			return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
