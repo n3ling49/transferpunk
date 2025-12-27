@@ -104,7 +104,7 @@
 			}
 
 			Promise.all(reqs).then(dataArr => {
-				dataArr.toReversed().map(res => res.players).flat().map((player, index) => {
+				dataArr.map(res => res.players).flat().sort((player1, player2) => new Date(player1.joinedOn) < new Date(player2.joinedOn) ? -1 : 1).map((player, index) => {
 					if(playerNames.includes(player.name)) return
 					
 					playerNames.push(player.name)
