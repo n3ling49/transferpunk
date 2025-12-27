@@ -20,6 +20,7 @@
 			<select name="" id="end-season" onchange="correctDate()">
 			</select>
 			<button onclick="refreshPlayers()">Go</button><br><br>
+			Allow small errors: <input type="checkbox" id="errors-checkbox"><br><br>
 			<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button><br><br>
 			<div id="players">
 			</div>
@@ -145,6 +146,10 @@
 		function getErrorAmount(answerPart, correctPart) {
 			//console.log(`answerPart: ${answerPart}, correctPart: ${correctPart}`)
 			let errors = checkErrors(answerPart, correctPart)
+
+			const errorCheckbox = document.getElementById("errors-checkbox")
+			if (!errorCheckbox.checked || answerPart.length < 10) return errors //TODO: is this too harsh?
+
 			//check if one char too much
 			errors = checkMissingChar(errors, answerPart, (newAnswer) => checkErrors(newAnswer, correctPart))
 			//check if one char missing
@@ -173,7 +178,8 @@
 			let errors = 0
 			answerParts.toReversed().map((answerPart, index) => errors += getErrorAmount(answerPart, nameParts.toReversed()[index]))
 
-			const allowedErrors = Math.floor(correctName.length / 6)
+			const errorCheckbox = document.getElementById("errors-checkbox")
+			const allowedErrors = errorCheckbox.checked ? Math.floor(correctName.length / 10) : 0
 			if (errors <= allowedErrors) return true
 			return false
 		}
