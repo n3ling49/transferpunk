@@ -21,14 +21,14 @@
 			</select>
 			<button onclick="refreshPlayers()">Go</button><br><br>
 			Allow small errors: <input type="checkbox" id="errors-checkbox"> Reveal Players: <button onclick="revealPlayers()">reveal</button><br><br>
-			<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button> (<span id="correct-players">0</span>/<span id="total-players">0</span>)<br><br>
+			<div style="position: sticky;top: 20px;">
+				<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button> (<span id="correct-players">0</span>/<span id="total-players">0</span>)<br><br>
+			</div>
 			<div id="players" style="column-count: 3;">
 			</div>
 		</main>
 	</body>
 	<script>
-		//TODO: sticky submit input
-
 		//TODO: styling
 
 		const input = document.getElementById("answer");
