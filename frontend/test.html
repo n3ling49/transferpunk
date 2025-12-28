@@ -20,14 +20,16 @@
 			<select name="" id="end-season" onchange="correctDate()">
 			</select>
 			<button onclick="refreshPlayers()">Go</button><br><br>
-			Allow small errors: <input type="checkbox" id="errors-checkbox"><br><br>
+			Allow small errors: <input type="checkbox" id="errors-checkbox"> Reveal Players: <button onclick="revealPlayers()">reveal</button><br><br>
 			<input id="answer" type="text"><button id="submitBtn" onclick="checkAnswer()">Ok</button> (<span id="correct-players">0</span>/<span id="total-players">0</span>)<br><br>
 			<div id="players">
 			</div>
 		</main>
 	</body>
 	<script>
-		//TODO: track and display correct answers
+		//TODO: split up answers into multiple columns
+		//TODO: sticky submit input
+
 		//TODO: styling
 
 		//buli: L1, serie a: IT1, laliga: ES1, prem: GB1, ligue 1: FR1
@@ -131,6 +133,10 @@
 			return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 		}
 
+		function revealPlayer(playerIndex) {
+			document.getElementById("players").children[playerIndex*2].innerText+=" "+playerNames[playerIndex]
+		}
+
 		function checkAnswer(){
 			const answerInput = document.getElementById("answer")
 			const answer = answerInput.value.toLowerCase()
@@ -140,7 +146,7 @@
 			if(answerIndex === -1) return
 			indexAnswered[answerIndex] = true
 			updateScore(indexAnswered.reduce((totalAnswered, isAnswered) => totalAnswered += isAnswered ? 1 : 0, 0))
-			document.getElementById("players").children[answerIndex*2].innerText+=" "+playerNames[answerIndex]
+			revealPlayer(answerIndex)
 		}
 
 		function checkMissingChar(errors, originalString, callback) {
@@ -193,5 +199,12 @@
 			if (errors <= allowedErrors) return true
 			return false
 		}
+
+		function revealPlayers() {
+			for(let i=0;i<playerNames.length;i++) {
+				revealPlayer(i)
+			}
+		}
+
 	</script>
 </html>
