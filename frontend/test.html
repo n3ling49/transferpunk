@@ -98,7 +98,7 @@
 		function refreshPlayers() {
 			playerNames = []
 			const playersElement = document.getElementById("players")
-			playersElement.innerHTML = ""
+			playersElement.innerHTML = "loading..."
 			
 			const clubElement = document.getElementById("club")
 			const startElement = document.getElementById("start-season")
@@ -110,6 +110,7 @@
 			}
 
 			Promise.all(reqs).then(dataArr => {
+				playersElement.innerHTML = ""
 				dataArr.map(res => res.players).flat().sort((player1, player2) => new Date(player1.joinedOn) < new Date(player2.joinedOn) ? -1 : 1).map((player, index) => {
 					if(playerNames.includes(player.name)) return
 					
@@ -119,7 +120,7 @@
 					playersElement.append(newElement) //TODO: unsafe -> XSS
 					playersElement.append(document.createElement('br'))
 				})
-			}).finally(() => {
+			}, () => playersElement.innerHTML = "").finally(() => {
 				indexAnswered = Array(playerNames.length).fill(false) //TODO: can this be handled better? one object for answer and isAnswered?
 				updateScore(0)
 			})
